@@ -1,9 +1,12 @@
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+
 import java.io.*;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.Socket;
-import java.net.UnknownHostException;
+import java.net.*;
+import java.util.Iterator;
 import java.util.Scanner;
+import java.util.Set;
 
 public class Main {
     public static void main(String[] args) {
@@ -31,24 +34,49 @@ public class Main {
             Scanner scan = new Scanner(System.in);
 
             while (true) {
-                System.out.print("Skriv in ditt meddelande: ");
-                String message = scan.nextLine();
+                //Anroppar meny för användare, låter dem göra ett val.
+                //Valet returneras som ett färdigt JSON string
+                String message = userInput();
 
                 //Skicka meddelande till server
                 bWriter.write(message);
                 bWriter.newLine();
                 bWriter.flush();
 
-                //Skriv ut responseMeddelande från server
-                System.out.println(bReader.readLine());
+                //Hämta respnse från server
+                String resp = bReader.readLine();
 
+                //Init Parser för att parsa till JSON Objekt
+                JSONParser parser = new JSONParser();
+
+                //Skapar ett JSON objekt från server respons
+                JSONObject serverResponse = (JSONObject) parser.parse(resp);
+
+                //Kollar om respons lyckas
+                if ("200".equals(serverResponse.get("httpStatusCode").toString())) {
+                    //TODO Kolla vad som har returnerats
+
+                    //Bygger upp ett JSONObjekt av den returnerade datan
+                    JSONObject data = (JSONObject) parser.parse((String) serverResponse.get("data"));
+
+                    //Hämtar en lista av alla nycklar attribut i data och loopar sedan igenom dem
+                    Set<String> keys = data.keySet();
+                    for (String x : keys) {
+                        //Hämtar varje person object som finns i data
+                        JSONObject person = (JSONObject) data.get(x);
+
+                        //Skriv ut namnet på person
+                        System.out.println(person.get("name"));
+                    }
+                }
                 //Avsluta om QUIT
-                if (message.equalsIgnoreCase("quit")) break;
+                //if (message.equalsIgnoreCase("quit")) break;
             }
-
         } catch (UnknownHostException e) {
             System.out.println(e);
         } catch (IOException e) {
+            System.out.println(e);
+        } catch (ParseException e) {
             System.out.println(e);
         } finally {
             try {
@@ -63,5 +91,34 @@ public class Main {
             }
             System.out.println("Client Avslutas");
         }
+    }
+
+    static String userInput() {
+        //Steg 1. Skriv ut en meny för användaren
+        System.out.println("1. Hämta data om alla personer");
+
+        //Steg 2. Låta användaren göra ett val
+        Scanner scan = new Scanner(System.in);
+        System.out.print("Skriv in ditt menyval: ");
+
+        String val = scan.nextLine();
+
+        //Steg 3. Bearbeta användarens val
+        switch (val){
+            case "1" : {
+                //Skapa JSON objekt för att hämta data om alla personer. Stringifiera objekete och returnera det
+                JSONObject jsonReturn = new JSONObject();
+                jsonReturn.put("httpURL", "persons");
+                jsonReturn.put("httpMethod", "get");
+
+                System.out.println(jsonReturn.toJSONString());
+
+                //Returnera JSON objekt
+                return jsonReturn.toJSONString();
+                //break;
+            }
+        }
+
+        return "error";
     }
 }
