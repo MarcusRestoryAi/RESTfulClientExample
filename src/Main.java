@@ -46,29 +46,9 @@ public class Main {
                 //Hämta respnse från server
                 String resp = bReader.readLine();
 
-                //Init Parser för att parsa till JSON Objekt
-                JSONParser parser = new JSONParser();
+                //Anropa openResponse metod med server response
+                openResponse(resp);
 
-                //Skapar ett JSON objekt från server respons
-                JSONObject serverResponse = (JSONObject) parser.parse(resp);
-
-                //Kollar om respons lyckas
-                if ("200".equals(serverResponse.get("httpStatusCode").toString())) {
-                    //TODO Kolla vad som har returnerats
-
-                    //Bygger upp ett JSONObjekt av den returnerade datan
-                    JSONObject data = (JSONObject) parser.parse((String) serverResponse.get("data"));
-
-                    //Hämtar en lista av alla nycklar attribut i data och loopar sedan igenom dem
-                    Set<String> keys = data.keySet();
-                    for (String x : keys) {
-                        //Hämtar varje person object som finns i data
-                        JSONObject person = (JSONObject) data.get(x);
-
-                        //Skriv ut namnet på person
-                        System.out.println(person.get("name"));
-                    }
-                }
                 //Avsluta om QUIT
                 //if (message.equalsIgnoreCase("quit")) break;
             }
@@ -120,5 +100,35 @@ public class Main {
         }
 
         return "error";
+    }
+
+    static String openResponse(String resp) throws ParseException {
+        String testReturn = "";
+        //Init Parser för att parsa till JSON Objekt
+        JSONParser parser = new JSONParser();
+
+        //Skapar ett JSON objekt från server respons
+        JSONObject serverResponse = (JSONObject) parser.parse(resp);
+
+        //Kollar om respons lyckas
+        if ("200".equals(serverResponse.get("httpStatusCode").toString())) {
+            //TODO Kolla vad som har returnerats
+
+            //Bygger upp ett JSONObjekt av den returnerade datan
+            JSONObject data = (JSONObject) parser.parse((String) serverResponse.get("data"));
+
+            //Hämtar en lista av alla nycklar attribut i data och loopar sedan igenom dem
+            Set<String> keys = data.keySet();
+            for (String x : keys) {
+                //Hämtar varje person object som finns i data
+                JSONObject person = (JSONObject) data.get(x);
+
+                //Skriv ut namnet på person
+                System.out.println(person.get("name"));
+                testReturn += person.get("name");
+            }
+        }
+
+        return testReturn;
     }
 }
