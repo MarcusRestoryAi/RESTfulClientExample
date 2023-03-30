@@ -27,4 +27,24 @@ class MainTest {
         //Test
         assertEquals(Main.openResponse(servResp), "Marcus");
     }
+
+    @Test
+    void testConnectionToServer() throws ParseException {
+        //Skapa Request JSON från menyval att hämta data
+        JSONObject jsonRequest = new JSONObject();
+        jsonRequest.put("httpURL", "test");
+        jsonRequest.put("httpMethod", "get");
+
+        //Skapa JSON string
+        String strRequest = jsonRequest.toJSONString();
+
+        //Skicka Request till server, ta emot response
+        String strResponse = Main.connectToServer(strRequest);
+
+        //Skickar response till unpacking
+        String strTestAnswer = Main.openResponse(strResponse);
+
+        //Test med Assert
+        assertEquals(strTestAnswer, "ABC");
+    }
 }

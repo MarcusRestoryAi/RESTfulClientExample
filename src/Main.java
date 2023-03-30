@@ -9,17 +9,48 @@ import java.util.Scanner;
 import java.util.Set;
 
 public class Main {
-    public static void main(String[] args) {
+
+    //Init stuff. Set as null to be initialized as "something"
+    static Socket socket = null;
+    static InputStreamReader inputSR = null;
+    static OutputStreamWriter outputSW = null;
+    static BufferedReader bReader = null;
+    static BufferedWriter bWriter = null;
+
+    public static void main(String[] args) throws ParseException {
         System.out.println("Client är nu redo");
 
-        //Init stuff. Set as null to be initialized as "something"
-        Socket socket = null;
-        InputStreamReader inputSR = null;
-        OutputStreamWriter outputSW = null;
-        BufferedReader bReader = null;
-        BufferedWriter bWriter = null;
+        //Användare meny
+        //Anroppar meny för användare, låter dem göra ett val.
+        //Valet returneras som ett färdigt JSON string
+        while (true) {
+            String strRequest = userInput();
 
-        //Starta Klienten
+            String strResponse = connectToServer(strRequest);
+
+            //If sats för att avsluta
+            if ("QUIT".equals(strResponse)) break;
+
+            //Anropa openResponse metod med server response
+            openResponse(strResponse);
+        }
+
+        try {
+            //Stäng kopplingar
+            if (socket != null) socket.close();
+            if (inputSR != null) inputSR.close();
+            if (outputSW != null) outputSW.close();
+            if (bWriter != null) bWriter.close();
+            if (bReader != null) bReader.close();
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+
+        System.out.println("Client Avslutas");
+    }
+
+
+    static String connectToServer(String strRequest) {
         try {
             //Init Socket med specifik port
             socket = new Socket("localhost", 4321);
@@ -34,20 +65,20 @@ public class Main {
             Scanner scan = new Scanner(System.in);
 
             while (true) {
-                //Anroppar meny för användare, låter dem göra ett val.
-                //Valet returneras som ett färdigt JSON string
-                String message = userInput();
+
 
                 //Skicka meddelande till server
-                bWriter.write(message);
+                bWriter.write(strRequest);
                 bWriter.newLine();
                 bWriter.flush();
 
                 //Hämta respnse från server
                 String resp = bReader.readLine();
 
+                return resp;
+
                 //Anropa openResponse metod med server response
-                openResponse(resp);
+                //openResponse(resp);
 
                 //Avsluta om QUIT
                 //if (message.equalsIgnoreCase("quit")) break;
@@ -56,26 +87,17 @@ public class Main {
             System.out.println(e);
         } catch (IOException e) {
             System.out.println(e);
-        } catch (ParseException e) {
-            System.out.println(e);
         } finally {
-            try {
-                //Stäng kopplingar
-                if (socket != null ) socket.close();
-                if (inputSR != null ) inputSR.close();
-                if (outputSW != null ) outputSW.close();
-                if (bWriter != null ) bWriter.close();
-                if (bReader != null ) bReader.close();
-            } catch (Exception e) {
-                System.out.println(e);
-            }
-            System.out.println("Client Avslutas");
+
         }
+
+        return "hej";
     }
 
     static String userInput() {
         //Steg 1. Skriv ut en meny för användaren
         System.out.println("1. Hämta data om alla personer");
+        System.out.println("2. Stäng ner Server och klient");
 
         //Steg 2. Låta användaren göra ett val
         Scanner scan = new Scanner(System.in);
@@ -84,8 +106,8 @@ public class Main {
         String val = scan.nextLine();
 
         //Steg 3. Bearbeta användarens val
-        switch (val){
-            case "1" : {
+        switch (val) {
+            case "1": {
                 //Skapa JSON objekt för att hämta data om alla personer. Stringifiera objekete och returnera det
                 JSONObject jsonReturn = new JSONObject();
                 jsonReturn.put("httpURL", "persons");
@@ -96,6 +118,9 @@ public class Main {
                 //Returnera JSON objekt
                 return jsonReturn.toJSONString();
                 //break;
+            }
+            case "2": {
+                return "QUIT";
             }
         }
 
